@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Remotion output
+out/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+
+#src
+src/
+!src/index.ts
+!src/Root.tsx
+
+public/*
