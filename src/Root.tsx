@@ -2,10 +2,25 @@ import {Composition} from 'remotion';
 import {MyAnimation as BarChartAnimation} from '../skills/remotion/rules/assets/charts-bar-chart';
 import {MyAnimation as TypewriterAnimation} from '../skills/remotion/rules/assets/text-animations-typewriter';
 import {MyAnimation as WordHighlightAnimation} from '../skills/remotion/rules/assets/text-animations-word-highlight';
+import {TopSttVideo} from './TopStt/TopSttVideo';
+import {TOTAL_DURATION} from './TopStt/timing';
+import {
+	WIDTH as TOP_STT_WIDTH,
+	HEIGHT as TOP_STT_HEIGHT,
+	FPS as TOP_STT_FPS,
+} from './TopStt/theme';
 
 export const RemotionRoot = () => {
 	return (
 		<>
+			<Composition
+				id="TopSttVideo"
+				component={TopSttVideo}
+				durationInFrames={TOTAL_DURATION}
+				fps={TOP_STT_FPS}
+				width={TOP_STT_WIDTH}
+				height={TOP_STT_HEIGHT}
+			/>
 			<Composition
 				id="BarChart"
 				component={BarChartAnimation}
