@@ -1,17 +1,56 @@
 ---
 name: remotion-best-practices
-description: Best practices for Remotion - Video creation in React
+description: Create, edit, and render videos with Remotion — a React-based video framework. Load when writing Remotion compositions, animations, effects, captions, audio, transitions, 3D content, maps, voiceover, or when rendering videos with the Remotion CLI, Studio, or Player. Covers project setup, animations, assets, sequencing, captions, audio/sfx, visual effects, 3D/Three.js, maps (MapLibre), Google/local fonts, TailwindCSS, transitions, parameterized videos, GIFs, Lottie, FFmpeg, silence detection, voiceover, transparent videos, and rendering.
 metadata:
   tags: remotion, video, react, animation, composition
 ---
 
-## When to use
+# Remotion Skill
 
-Use this skills whenever you are dealing with Remotion code to obtain the domain-specific knowledge.
+Your Remotion knowledge may be outdated for version-specific APIs. For the latest API docs, prefer retrieval over pre-training.
 
-## New project setup
+## Retrieval Sources
 
-When in an empty folder or workspace with no existing Remotion project, scaffold one using:
+| Topic | Docs URL | Use for |
+|-------|----------|---------|
+| Core | https://www.remotion.dev/docs/ | General API reference |
+| Effects | https://www.remotion.dev/docs/effects | Built-in visual effects |
+| Custom effects | https://www.remotion.dev/docs/create-effect | `createEffect()` API |
+| Transitions | https://www.remotion.dev/docs/transitions | Scene transitions |
+| Captions | https://www.remotion.dev/docs/captions | Caption rendering |
+| Media utils | https://www.remotion.dev/docs/media-utils | Audio/video metadata |
+| Player | https://www.remotion.dev/docs/player | Embedded <Player> |
+| Studio | https://www.remotion.dev/docs/studio | Remotion Studio |
+| Renderer | https://www.remotion.dev/docs/renderer | Programmatic rendering |
+| MCP | https://www.remotion.dev/docs/mcp | Claude MCP integration |
+
+## Capabilities
+
+Remotion provides:
+
+- **React-based video** — Compose videos as React components with JSX, hooks, and CSS
+- **Frame-accuracy** — Every frame is a function of time via `useCurrentFrame()`
+- **Interpolation** — `interpolate()` with easing for CSS transform, opacity, and layout animations
+- **Sequencing** — `<Sequence>` for delay, trim, and duration control of nested components
+- **Assets** — `<Img>`, `<Video>` (`@remotion/media`), `<Audio>` (`@remotion/media`), `staticFile()`
+- **Captions** — SRT import, transcription with Whisper, caption rendering with styles
+- **Audio** — Volume envelope, speed, trimming, pitch shift, sound effects via `@remotion/sfx`
+- **Visual effects** — 50+ WebGL/canvas effects via `@remotion/effects`, custom `createEffect()`
+- **3D** — Three.js + React Three Fiber integration via `@remotion/three`
+- **Maps** — MapLibre with animated flyovers and routes
+- **Transitions** — Pre-built slide/wipe/fade and custom transitions via `@remotion/transitions`
+- **Google & local fonts** — `@remotion/google-fonts` and `loadFont()` for local fonts
+- **TailwindCSS** — Tailwind CSS v4 integration via `@remotion/tailwind-v4`
+- **Parameterized videos** — Input props with Zod schemas for dynamic video generation
+- **Transparent video** — Render with alpha channel (WebM, ProRes)
+- **FFmpeg integration** — Trimming, silence detection, audio extraction
+- **Lottie & GIFs** — `@remotion/lottie` and synchronized GIF display
+- **Voiceover** — ElevenLabs TTS integration
+- **Programmatic rendering** — CLI (`npx remotion render`), stills, and Node.js API
+
+## Project setup
+
+Scaffold a new project in an empty folder:
 
 ```bash
 npx create-video@latest --yes --blank --no-tailwind my-video
@@ -21,11 +60,13 @@ Replace `my-video` with a suitable project name.
 
 ## Designing a video
 
-Before designing visual scenes, layouts, promos, motion graphics, or text-heavy videos, load [rules/video-layout.md](rules/video-layout.md) for video-first layout and text sizing guidance.
+Load [rules/video-layout.md](rules/video-layout.md) before designing visual scenes, layouts, promos, motion graphics, or text-heavy videos for video-first layout and text sizing guidance.
+
+### Animations
 
 Animate properties using `useCurrentFrame()` and `interpolate()`. Prefer `interpolate()` over `spring()` unless physics-based motion is explicitly needed. Use `Easing.bezier()` to customize timing, including jumpy or overshooting motion.
 
-For animations that should be editable in Remotion Studio, keep the `interpolate()` call inline in the `style` prop and use individual CSS transform properties (`scale`, `translate`, `rotate`) instead of composing a `transform` string.
+For animations editable in Remotion Studio, keep `interpolate()` inline in the `style` prop and use individual CSS transform properties (`scale`, `translate`, `rotate`) instead of composing a `transform` string.
 
 ```tsx
 import { useCurrentFrame, Easing, interpolate, useVideoConfig } from "remotion";
@@ -44,8 +85,7 @@ export const FadeIn = () => {
 };
 ```
 
-Prefer:
-
+**Prefer:**
 ```tsx
 style={{
   scale: interpolate(frame, [0, 100], [0, 1]),
@@ -54,8 +94,7 @@ style={{
 }}
 ```
 
-Over:
-
+**Over:**
 ```tsx
 const scale = interpolate(frame, [0, 100], [0, 1]);
 
@@ -64,81 +103,44 @@ style={{
 }}
 ```
 
-CSS transitions or animations are FORBIDDEN - they will not render correctly.  
-Tailwind animation class names are FORBIDDEN - they will not render correctly.
+CSS transitions or animations are FORBIDDEN — they will not render correctly.
+Tailwind animation class names are FORBIDDEN — they will not render correctly.
 
-Place assets in the `public/` folder at your project root.
+### Assets
 
-Use `staticFile()` to reference files from the `public/` folder.
+Find images for backgrounds and assets using [rules/image-search.md](rules/image-search.md) (TeguSearch + Unsplash proxy).
 
-Add images using the `<Img>` component:
+Place assets in the `public/` folder at your project root. Reference them with `staticFile()`.
 
 ```tsx
 import { Img, staticFile } from "remotion";
+import { Video, Audio } from "@remotion/media";
 
 export const MyComposition = () => {
-  return <Img src={staticFile("logo.png")} style={{ width: 100, height: 100 }} />;
+  return (
+    <>
+      <Img src={staticFile("logo.png")} style={{ width: 100, height: 100 }} />
+      <Video src={staticFile("video.mp4")} style={{ opacity: 0.5 }} />
+      <Audio src={staticFile("audio.mp3")} />
+    </>
+  );
 };
 ```
 
-Add videos using the `<Video>` component from `@remotion/media`:
-
+Assets can also use remote URLs:
 ```tsx
-import { Video } from "@remotion/media";
-import { staticFile } from "remotion";
-
-export const MyComposition = () => {
-  return <Video src={staticFile("video.mp4")} style={{ opacity: 0.5 }} />;
-};
+<Video src="https://remotion.media/video.mp4" />
 ```
 
-Add audio using the `<Audio>` component from `@remotion/media`:
+### Sequencing
+
+Use `<Sequence>` to delay, trim, or limit the duration of content. `<Sequence>` defaults to an absolute fill; use `layout="none"` for inline content.
 
 ```tsx
-import { Audio } from "@remotion/media";
-import { staticFile } from "remotion";
+import { AbsoluteFill, Sequence, useCurrentFrame, useVideoConfig } from "remotion";
 
-export const MyComposition = () => {
-  return <Audio src={staticFile("audio.mp3")} />;
-};
-```
-
-Assets can be also referenced as remote URLs:
-
-```tsx
-import { Video } from "@remotion/media";
-
-export const MyComposition = () => {
-  return <Video src="https://remotion.media/video.mp4" />
-};
-```
-
-To delay content wrap it in `<Sequence>` and use `from`.
-To limit the duration of an element, use `durationInFrames` of `<Sequence>`.
-`<Sequence>` by default is an absolute fill. For inline content, use `layout="none"`.
-
-```tsx
-import { Sequence } from "remotion";
-
-export const Title = () => {
-  const frame = useCurrentFrame();
+export const Main = () => {
   const { fps } = useVideoConfig();
-
-  const opacity = interpolate(frame, [0, 2 * fps], [0, 1], {
-    extrapolateRight: "clamp",
-    extrapolateLeft: "clamp",
-    easing: Easing.bezier(0.16, 1, 0.3, 1),
-  });
-
-  return <div style={{ opacity }}>Title</div>;
-};
-
-export const Subtitle = () => {
-  return <div>Subtitle</div>;
-};
-
-const Main = () => {
-  const {fps} = useVideoConfig();
 
   return (
     <AbsoluteFill>
@@ -153,10 +155,12 @@ const Main = () => {
       </Sequence>
     </AbsoluteFill>
   );
-}
+};
 ```
 
-The width, height, fps, and duration of a video is defined in `src/Root.tsx`:
+### Composition setup
+
+Width, height, fps, and duration are defined in `src/Root.tsx`:
 
 ```tsx
 import { Composition } from "remotion";
@@ -176,25 +180,22 @@ export const RemotionRoot = () => {
 };
 ```
 
-Metadata can also be calculated dynamically:
+See [rules/compositions.md](rules/compositions.md) for stills, folders, default props, and nested compositions.
+
+### Dynamic metadata
+
+Use `calculateMetadata` to set duration, dimensions, and props dynamically:
 
 ```tsx
 import { Composition, CalculateMetadataFunction } from "remotion";
 import { MyComposition, MyCompositionProps } from "./MyComposition";
 
-const calculateMetadata: CalculateMetadataFunction<
-  MyCompositionProps
-> = async ({ props, abortSignal }) => {
-  const data = await fetch(`https://api.example.com/video/${props.videoId}`, {
-    signal: abortSignal,
-  }).then((res) => res.json());
+const calculateMetadata: CalculateMetadataFunction<MyCompositionProps> = async ({ props, abortSignal }) => {
+  const data = await fetch(`https://api.example.com/video/${props.videoId}`, { signal: abortSignal }).then((r) => r.json());
 
   return {
     durationInFrames: Math.ceil(data.duration * 30),
-    props: {
-      ...props,
-      videoUrl: data.url,
-    },
+    props: { ...props, videoUrl: data.url },
     width: 1080,
     height: 1080,
   };
@@ -215,150 +216,120 @@ export const RemotionRoot = () => {
 };
 ```
 
-## Starting preview
+See [rules/calculate-metadata.md](rules/calculate-metadata.md) for more.
 
-Start the Remotion Studio to preview a video:
+## Preview & Render
 
+### Studio
 ```bash
 npx remotion studio
 ```
 
-## Optional: one-frame render check
-
-You can render a single frame with the CLI to sanity-check layout, colors, or timing.  
-Skip it for trivial edits, pure refactors, or when you already have enough confidence from Studio or prior renders.
-
+### Single-frame check
 ```bash
 npx remotion still [composition-id] --scale=0.25 --frame=30
 ```
-
-At 30 fps, `--frame=30` is the one-second mark (`--frame` is zero-based).
-
-## Captions
-
-When dealing with captions or subtitles, load the [./rules/subtitles.md](./rules/subtitles.md) file for more information.
-
-## Using FFmpeg
-
-For some video operations, such as trimming videos or detecting silence, FFmpeg should be used. Load the [./rules/ffmpeg.md](./rules/ffmpeg.md) file for more information.
-
-## Silence detection
-
-When needing to detect and trim silent segments from video or audio files, load the [./rules/silence-detection.md](./rules/silence-detection.md) file.
-
-## Audio visualization
-
-When needing to visualize audio (spectrum bars, waveforms, bass-reactive effects), load the [./rules/audio-visualization.md](./rules/audio-visualization.md) file for more information.
-
-## Sound effects
-
-When needing to use sound effects, load the [./rules/sfx.md](./rules/sfx.md) file for more information.
-
-## Visual and pixel effects
-
-When creating a visual effect, prefer: 1. normal Remotion/HTML/CSS/SVG/filter/blend/mask animation, 2. a listed effect via [rules/effects.md](rules/effects.md), including on HTML rendered through `<HtmlInCanvas>`, 3. a custom `createEffect()` via [rules/effects.md](rules/effects.md) when the user asks for a reusable/project-specific effect, 4. custom `<HtmlInCanvas onPaint>` via [rules/html-in-canvas.md](rules/html-in-canvas.md) only if no effect fits.
-
-For light leak overlays, see [rules/light-leaks.md](rules/light-leaks.md). Docs: https://www.remotion.dev/docs/effects
-
-Available effects: `brightness()`, `contrast()`, `colorKey()`, `duotone()`, `grayscale()`, `hue()`, `invert()`, `saturation()`, `tint()`, `thermalVision()`, `blur()`, `linearProgressiveBlur()`, `zoomBlur()`, `dropShadow()`, `glow()`, `lightTrail()`, `evolve()`, `mirror()`, `scale()`, `uvTranslate()`, `xyTranslate()`, `barrelDistortion()`, `chromaticAberration()`, `fisheye()`, `cornerPin()`, `wave()`, `burlap()`, `emboss()`, `dotGrid()`, `halftone()`, `noise()`, `noiseDisplacement()`, `pattern()`, `pixelate()`, `pixelDissolve()`, `scanlines()`, `speckle()`, `shine()`, `shrinkwrap()`, `vignette()`, `contourLines()`, `checkerboard()`, `halftoneLinearGradient()`, `gridlines()`, `whiteNoise()`, `tvSignalOff()`, `lines()`, `rings()`, `waves()`, `zigzag()`, `lightLeak()`, `starburst()`.
-
-## 3D content
-
-See [rules/3d.md](rules/3d.md) for 3D content in Remotion using Three.js and React Three Fiber.
-
-## Advanced audio
-
-See [rules/audio.md](rules/audio.md) for advanced audio features like trimming, volume, speed, pitch.
-
-## Dynamic duration, dimensions and data
-
-See [rules/calculate-metadata.md](rules/calculate-metadata.md) for dynamically set composition duration, dimensions, and props.
-
-## Advanced compositions
-
-See [rules/compositions.md](rules/compositions.md) for how to define stills, folders, default props and for how to nest compositions.
-
-## Google Fonts
-
-Is the recommended way to load fonts in Remotion. See [rules/google-fonts.md](rules/google-fonts.md) for how to load Google Fonts.
-
-## Local fonts
-
-See [rules/local-fonts.md](rules/local-fonts.md) for how to load local fonts.
-
-## Getting audio duration
-
-See [rules/get-audio-duration.md](rules/get-audio-duration.md) for getting the duration of an audio file in seconds with Mediabunny.
-
-## Getting video dimensions
-
-See [rules/get-video-dimensions.md](rules/get-video-dimensions.md) for getting the width and height of a video file with Mediabunny.
-
-## Getting video duration
-
-See [rules/get-video-duration.md](rules/get-video-duration.md) for getting the duration of a video file in seconds with Mediabunny.
-
-## GIFs
-
-See [rules/gifs.md](rules/gifs.md) for how to display GIFs synchronized with Remotion's timeline.
-
-## Advanced Images
-
-See [rules/images.md](rules/images.md) for sizing and positioning images, dynamic image paths, and getting image dimensions.
-
-## Lottie animations
-
-See [rules/lottie.md](rules/lottie.md) for embedding Lottie animations in Remotion.
-
-## Measuring DOM nodes
-
-See [rules/measuring-dom-nodes.md](rules/measuring-dom-nodes.md) for measuring DOM element dimensions in Remotion.
-
-## Measuring text
-
-See [rules/measuring-text.md](rules/measuring-text.md) for measuring text dimensions, fitting text to containers, and checking overflow.
-
-## Advanced sequencing
-
-See [rules/sequencing.md](rules/sequencing.md) for more sequencing patterns - delay, trim, limit duration of items.
-
-## TailwindCSS
-
-See [rules/tailwind.md](rules/tailwind.md) for using TailwindCSS in Remotion.
-
-## Text animations
-
-See [rules/text-animations.md](rules/text-animations.md) for typography and text animation patterns.
-
-## Advanced timing
-
-See [rules/timing.md](rules/timing.md) for advanced timing with `interpolate` and Bézier easing, and springs.
-
-## Transitions
-
-See [rules/transitions.md](rules/transitions.md) for scene transition patterns.
-
-## Transparent videos
-
-See [rules/transparent-videos.md](rules/transparent-videos.md) for rendering out a video with transparency.
-
-## Trimming
-
-See [rules/trimming.md](rules/trimming.md) for trimming patterns - cutting the beginning or end of animations.
-
-## Advanced Videos
-
-See [rules/videos.md](rules/videos.md) for advanced knowledge about embedding videos - trimming, volume, speed, looping, pitch.
-
-## Parameterized videos
-
-See [rules/parameters.md](rules/parameters.md) for making a composition parametrizable by adding a Zod schema.
-
-## Maps
-
-For simple maps with little flyovers, consider using static map images.
-For complex maps with animated routes or flyovers, load the maps rule: [rules/maplibre.md](rules/maplibre.md)
-
-## Voiceover
-
-See [rules/voiceover.md](rules/voiceover.md) for adding AI-generated voiceover to Remotion compositions using ElevenLabs TTS.
+At 30 fps, `--frame=30` is the one-second mark (zero-based). Skip for trivial edits.
+
+## Detailed rule references
+
+### Captions & Subtitles
+| Rule | Description |
+|------|-------------|
+| [subtitles.md](rules/subtitles.md) | Caption/subtitle rendering |
+| [display-captions.md](rules/display-captions.md) | Display captions on compositions |
+| [import-srt-captions.md](rules/import-srt-captions.md) | Import SRT caption files |
+| [transcribe-captions.md](rules/transcribe-captions.md) | Transcribe audio to captions with Whisper |
+
+### Audio
+| Rule | Description |
+|------|-------------|
+| [audio.md](rules/audio.md) | Trimming, volume, speed, pitch |
+| [audio-visualization.md](rules/audio-visualization.md) | Spectrum bars, waveforms, bass-reactive effects |
+| [sfx.md](rules/sfx.md) | Sound effects with `@remotion/sfx` |
+| [get-audio-duration.md](rules/get-audio-duration.md) | Get audio duration with Mediabunny |
+
+### Video
+| Rule | Description |
+|------|-------------|
+| [videos.md](rules/videos.md) | Trimming, volume, speed, looping, pitch |
+| [get-video-dimensions.md](rules/get-video-dimensions.md) | Get video width/height with Mediabunny |
+| [get-video-duration.md](rules/get-video-duration.md) | Get video duration with Mediabunny |
+| [transparent-videos.md](rules/transparent-videos.md) | Render with alpha channel |
+
+### Visual Effects
+| Rule | Description |
+|------|-------------|
+| [effects.md](rules/effects.md) | Built-in + custom canvas/WebGL effects |
+| [light-leaks.md](rules/light-leaks.md) | Light leak overlays |
+| [html-in-canvas.md](rules/html-in-canvas.md) | HTML rendered inside `<HtmlInCanvas>` |
+
+### Text & Typography
+| Rule | Description |
+|------|-------------|
+| [text-animations.md](rules/text-animations.md) | Typography/word-level animation patterns |
+| [google-fonts.md](rules/google-fonts.md) | Load Google Fonts |
+| [local-fonts.md](rules/local-fonts.md) | Load local fonts |
+| [measuring-text.md](rules/measuring-text.md) | Measure text, fit to container, check overflow |
+
+### Layout & Timing
+| Rule | Description |
+|------|-------------|
+| [video-layout.md](rules/video-layout.md) | Video-first layout, composition, text sizing |
+| [timing.md](rules/timing.md) | Advanced timing, easing, springs |
+| [sequencing.md](rules/sequencing.md) | Delay, trim, limit duration patterns |
+| [trimming.md](rules/trimming.md) | Cut beginning or end of animations |
+
+### Transitions
+| Rule | Description |
+|------|-------------|
+| [transitions.md](rules/transitions.md) | Scene transition patterns |
+
+### 3D & Maps
+| Rule | Description |
+|------|-------------|
+| [3d.md](rules/3d.md) | Three.js + React Three Fiber |
+| [maplibre.md](rules/maplibre.md) | MapLibre animated maps |
+
+### Image Search & Assets
+| Rule | Description |
+|------|-------------|
+| [image-search.md](rules/image-search.md) | Find images via TeguSearch and Unsplash APIs |
+| [images.md](rules/images.md) | Sizing, positioning, dynamic paths, dimensions |
+| [gifs.md](rules/gifs.md) | Synchronized GIF display |
+| [lottie.md](rules/lottie.md) | Lottie animations |
+
+### DOM Measurement
+| Rule | Description |
+|------|-------------|
+| [measuring-dom-nodes.md](rules/measuring-dom-nodes.md) | Measure DOM element dimensions |
+| [measuring-text.md](rules/measuring-text.md) | Measure text dimensions |
+
+### Assets & FFmpeg
+| Rule | Description |
+|------|-------------|
+| [ffmpeg.md](rules/ffmpeg.md) | FFmpeg video operations |
+| [silence-detection.md](rules/silence-detection.md) | Detect/trim silent segments |
+
+### Styling
+| Rule | Description |
+|------|-------------|
+| [tailwind.md](rules/tailwind.md) | Tailwind CSS v4 in Remotion |
+
+### Parameterized & Metadata
+| Rule | Description |
+|------|-------------|
+| [parameters.md](rules/parameters.md) | Zod schemas for input props |
+| [calculate-metadata.md](rules/calculate-metadata.md) | Dynamic duration, dimensions, data |
+
+### Voiceover
+| Rule | Description |
+|------|-------------|
+| [voiceover.md](rules/voiceover.md) | ElevenLabs TTS voiceover |
+
+## Assets
+
+The `rules/assets/` directory contains reusable Remotion component examples:
+- `charts-bar-chart.tsx` — Bar chart component
+- `text-animations-word-highlight.tsx` — Word highlight animation
+- `text-animations-typewriter.tsx` — Typewriter text animation

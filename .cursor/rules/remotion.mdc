@@ -1,0 +1,12 @@
+---
+description: Remotion video creation best practices
+globs: "**/*.{ts,tsx}"
+---
+
+This project uses Remotion for video creation.
+
+Reference the full skill documentation at:
+/Users/lugon/code/remotion-dev-skills/skills/remotion/SKILL.md
+
+For video layout guidance, see:
+/Users/lugon/code/remotion-dev-skills/skills/remotion/rules/video-layout.md
